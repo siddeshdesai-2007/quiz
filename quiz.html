@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MCOE QUIZ</title>
+<style>
+  :root{
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#4f46e5;
+    --ok:#10b981;
+    --err:#ef4444;
+    --glass: rgba(255,255,255,0.6);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;color:#0f172a}
+  .container{width:100%;max-width:900px}
+  .card{background:var(--card);border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(2,6,23,0.08);overflow:hidden}
+  .title{display:flex;align-items:center;gap:16px}
+  .logo{
+    display:inline-grid;place-items:center;width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7c3aed);color:white;font-weight:700;font-size:18px;transform:rotate(-6deg);
+    box-shadow:0 6px 18px rgba(79,70,229,0.18);
+  }
+  h1{margin:0;font-size:28px;letter-spacing:-0.6px}
+  .subtitle{color:var(--muted);margin-top:8px;font-size:14px}
+  .actions{margin-top:20px;display:flex;gap:10px;align-items:center}
+  .btn{border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .18s;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+  .btn.primary{background:var(--accent);color:white}
+  .btn.ghost{background:#fff;border:1px solid #e6e9ef;color:#0f172a}
+  .info{margin-left:auto;color:var(--muted);font-size:12px}
+  .center{display:grid;place-items:center;padding:32px 12px}
+  .quiz-wrap{display:grid;gap:18px}
+  .meta{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px}
+  .question{font-size:18px;font-weight:600;color:#0f172a}
+  .options{display:grid;gap:10px;margin-top:8px}
+  .option{background:#fff;border:1px solid #e6e9ef;padding:12px;border-radius:10px;text-align:left;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:12px}
+  .option:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(2,6,23,0.06)}
+  .option.selected{background:rgba(79,70,229,0.06);border-color:rgba(79,70,229,0.18)}
+  .option .letter{width:34px;height:34px;border-radius:8px;background:#f1f5f9;display:grid;place-items:center;font-weight:700}
+  .controls{display:flex;gap:10px;align-items:center;margin-top:14px}
+  .controls .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+  .progress{margin-left:auto;color:var(--muted);font-size:13px}
+  .finish{display:grid;gap:14px}
+  .input{width:100%;padding:10px;border-radius:10px;border:1px solid #e6e9ef}
+  .answers{margin-top:10px;display:grid;gap:10px}
+  .ans-row{display:flex;gap:12px;align-items:flex-start}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.ok{background:var(--ok)}
+  .dot.err{background:var(--err)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 6px;text-align:left}
+  thead th{color:var(--muted);font-size:12px}
+  tbody tr{border-top:1px solid #f1f5f9}
+  .small{font-size:13px;color:var(--muted)}
+  .center-row{display:flex;gap:8px;align-items:center}
+  .empty{padding:18px;background:#fbfdff;border-radius:10px;color:var(--muted)}
+  @media (max-width:600px){.title{gap:10px}.logo{width:52px;height:52px;font-size:16px}.card{padding:18px}}
+  .fade-in{animation:fadeIn .28s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .pulse{animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="app">
+
+      <!-- HOME -->
+      <div id="home" class="fade-in">
+        <div class="title">
+          <div class="logo">MCOE</div>
+          <div>
+            <h1>MCOE QUIZ</h1>
+            <div class="subtitle">C Language — 15 Questions</div>
+          </div>
+        </div>
+        <div class="subtitle" style="margin-top:18px">Test your C fundamentals — operators, pointers, memory, control flow and more. And leaderboard.</div>
+        <div class="actions">
+          <button class="btn primary" id="startBtn">Start Quiz</button>
+          <button class="btn ghost" id="viewLeaderboardBtn">View Leaderboard</button>
+          <div class="info">Scores saved locally</div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div id="quiz" style="display:none" class="fade-in">
+        <div class="quiz-wrap">
+          <div class="meta">
+            <div>
+              <div class="small" id="qCount">Question 1 of 15</div>
+              <div class="small" id="score">Score: 0</div>
+            </div>
+            <div class="small">C Fundamentals</div>
+          </div>
+
+          <div>
+            <div class="question" id="questionText"></div>
+            <div class="options" id="options"></div>
+          </div>
+
+          <div class="controls">
+            <button class="btn primary" id="nextBtn" disabled>Next</button>
+            <button class="btn ghost" id="quitBtn">Quit</button>
+            <div class="progress" id="progressText">0% complete</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINISH -->
+      <div id="finish" style="display:none" class="fade-in">
+        <div class="finish">
+          <div>
+            <h2 style="margin:0">Quiz Complete</h2>
+            <div class="small" style="margin-top:6px">You scored <strong id="finalScore">0</strong> out of 15.</div>
+          </div>
+
+          <div>
+            <div class="small">Enter name for leaderboard</div>
+            <input id="nameInput" class="input" placeholder="Your name" />
+          </div>
+
+          <div class="center-row" style="margin-top:6px">
+            <button class="btn primary" id="saveScoreBtn">Save Score</button>
+            <button class="btn ghost" id="skipLeaderboardBtn">Skip & View Leaderboard</button>
+            <div style="margin-left:auto"><button class="btn" id="homeBtn">Home</button></div>
+          </div>
+
+          <div>
+            <div class="small" style="margin-top:6px">Your Answers</div>
+            <div class="answers" id="answersList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div id="leaderboard" style="display:none" class="fade-in">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 style="margin:0">Leaderboard</h2>
+          <div class="small">Top scores (local)</div>
+        </div>
+
+        <div id="leaderboardContent" style="margin-top:14px"></div>
+
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn primary" id="backHomeBtn">Back to Home</button>
+          <button class="btn ghost" id="clearScoresBtn">Clear Scores</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const QUESTIONS = [
+    { q: "Which of the following is the correct way to declare a variable 'x' of type integer in C?", options: ["int x;", "integer x;", "var x;", "x : int;"], a: 0 },
+    { q: "Which header file is required for the printf() function?", options: ["<stdlib.h>", "<stdio.h>", "<string.h>", "<math.h>"], a: 1 },
+    { q: "What is the output of: printf(\"%d\", 5/2); ?", options: ["2", "2.5", "3", "Compilation error"], a: 0 },
+    { q: "Which operator is used to get the address of a variable?", options: ["&", "*", "->", "%"], a: 0 },
+    { q: "Which of these correctly allocates memory dynamically for 10 integers using malloc?", options: ["int p = malloc(10);", "int *p = (int*)malloc(10 * sizeof(int));", "int p[10];", "int *p = allocate(10);"], a: 1 },
+    { q: "Which loop guarantees the body executes at least once?", options: ["for", "while", "do...while", "none of these"], a: 2 },
+    { q: "What does the 'break' statement do inside loops?", options: ["Skips current iteration", "Exits the loop immediately", "Pauses the loop", "Restarts the loop"], a: 1 },
+    { q: "Which is the correct main() signature returning int?", options: ["void main()", "int main()", "main()", "float main()"], a: 1 },
+    { q: "What is the size of 'char' on most platforms in C?", options: ["1 bit", "1 byte", "2 bytes", "Depends on compiler"], a: 1 },
+    { q: "Which function compares two strings in C?", options: ["strcmp()", "streq()", "compare()", "strcomp()"], a: 0 },
+    { q: "What will printf(\"%c\", 'A' + 1); print?", options: ["A", "B", "1", "Compilation error"], a: 1 },
+    { q: "Which keyword stops a function and returns a value?", options: ["stop", "break", "return", "exit"], a: 2 },
+    { q: "Which of these is NOT a storage class in C?", options: ["auto", "register", "static", "dynamic"], a: 3 },
+    { q: "Which operator accesses structure members through a pointer?", options: [".", "->", "*.", "&."], a: 1 },
+    { q: "What is the correct way to write a single-line comment in C?", options: ["/* comment */", "// comment", "# comment", "<!-- comment -->"], a: 1 }
+  ];
+
+  const STORAGE_KEY = "mcoe_quiz_leaderboard_v1";
+  const startBtn = document.getElementById("startBtn");
+  const viewLeaderboardBtn = document.getElementById("viewLeaderboardBtn");
+  const homeEl = document.getElementById("home");
+  const quizEl = document.getElementById("quiz");
+  const finishEl = document.getElementById("finish");
+  const leaderboardEl = document.getElementById("leaderboard");
+  const qCount = document.getElementById("qCount");
+  const scoreEl = document.getElementById("score");
+  const questionText = document.getElementById("questionText");
+  const optionsEl = document.getElementById("options");
+  const nextBtn = document.getElementById("nextBtn");
+  const quitBtn = document.getElementById("quitBtn");
+  const progressText = document.getElementById("progressText");
+  const finalScore = document.getElementById("finalScore");
+  const nameInput = document.getElementById("nameInput");
+  const saveScoreBtn = document.getElementById("saveScoreBtn");
+  const skipLeaderboardBtn = document.getElementById("skipLeaderboardBtn");
+  const homeBtn = document.getElementById("homeBtn");
+  const answersList = document.getElementById("answersList");
+  const leaderboardContent = document.getElementById("leaderboardContent");
+  const backHomeBtn = document.getElementById("backHomeBtn");
+  const clearScoresBtn = document.getElementById("clearScoresBtn");
+
+  let state = {
+    page: "home",
+    index: 0,
+    score: 0,
+    selected: null,
+    answers: [],
+    leaderboard: []
+  };
+
+  function loadLeaderboard() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.leaderboard = raw ? JSON.parse(raw) : [];
+    } catch {
+      state.leaderboard = [];
+    }
+  }
+
+  function saveLeaderboard() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.leaderboard));
+    } catch {}
+  }
+
+  function show(el) {
+    homeEl.style.display = "none";
+    quizEl.style.display = "none";
+    finishEl.style.display = "none";
+    leaderboardEl.style.display = "none";
+    el.style.display = "";
+  }
+
+  function startQuiz() {
+    state.index = 0;
+    state.score = 0;
+    state.selected = null;
+    state.answers = [];
+    renderQuestion();
+    show(quizEl);
+  }
+
+  function escapeHtml(s) {
+    return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function renderQuestion() {
+    const q = QUESTIONS[state.index];
+    qCount.textContent = `Question ${state.index + 1} of ${QUESTIONS.length}`;
+    scoreEl.textContent = `Score: ${state.score}`;
+    questionText.textContent = q.q;
+    optionsEl.innerHTML = "";
+
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.innerHTML = `
+        <div class="letter">${String.fromCharCode(65 + i)}</div>
+        <div style="flex:1">${escapeHtml(opt)}</div>
+      `;
+      btn.addEventListener("click", () => {
+        state.selected = i;
+        [...optionsEl.children].forEach((c, idx) => {
+          c.classList.toggle("selected", idx === i);
+        });
+        nextBtn.disabled = false;
+      });
+      optionsEl.appendChild(btn);
+    });
+
+    nextBtn.disabled = true;
+    progressText.textContent = `${Math.round((state.index / QUESTIONS.length) * 100)}% complete`;
+  }
+
+  function nextQuestion() {
+    if (state.selected === null) return;
+
+    const current = QUESTIONS[state.index];
+    const correct = current.a === state.selected;
+
+    state.answers.push({
+      qIndex: state.index,
+      picked: state.selected,
+      correct
+    });
+
+    if (correct) state.score++;
+
+    state.selected = null;
+
+    if (state.index + 1 >= QUESTIONS.length)
+      finishQuiz();
+    else {
+      state.index++;
+      renderQuestion();
+    }
+  }
+
+  function finishQuiz() {
+    finalScore.textContent = `${state.score}`;
+    renderAnswers();
+    nameInput.value = "";
+    show(finishEl);
+  }
+
+  function renderAnswers() {
+    answersList.innerHTML = "";
+    state.answers.forEach(a => {
+      const q = QUESTIONS[a.qIndex];
+      const row = document.createElement("div");
+      row.className = "ans-row";
+
+      const dot = document.createElement("div");
+      dot.className = "dot " + (a.correct ? "ok" : "err");
+
+      const info = document.createElement("div");
+      info.innerHTML = `
+        <div style="font-weight:600">Q${a.qIndex+1}: ${escapeHtml(q.q)}</div>
+        <div class="small">Your answer: ${escapeHtml(q.options[a.picked])}</div>
+        ${a.correct ? "" : `<div class="small" style="color:var(--muted)">Correct: ${escapeHtml(q.options[q.a])}</div>`}
+      `;
+
+      row.appendChild(dot);
+      row.appendChild(info);
+      answersList.appendChild(row);
+    });
+  }
+
+  function saveScore() {
+    const name = (nameInput.value || "").trim() || "Anonymous";
+    const entry = {
+      name,
+      score: state.score,
+      total: QUESTIONS.length,
+      date: new Date().toISOString()
+    };
+
+    state.leaderboard.unshift(entry);
+    if (state.leaderboard.length > 50) state.leaderboard.length = 50;
+
+    state.leaderboard.sort((a, b) =>
+      b.score - a.score ||
+      new Date(b.date) - new Date(a.date)
+    );
+
+    saveLeaderboard();
+    renderLeaderboard();
+    show(leaderboardEl);
+  }
+
+  function renderLeaderboard() {
+    if (!state.leaderboard.length) {
+      leaderboardContent.innerHTML = `<div class="empty">No scores yet — be the first!</div>`;
+      return;
+    }
+
+    const rows = state.leaderboard.slice(0, 10).map((e, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${escapeHtml(e.name)}</td>
+        <td>${e.score}/${e.total}</td>
+        <td class="small">${new Date(e.date).toLocaleString()}</td>
+      </tr>
+    `).join("");
+
+    leaderboardContent.innerHTML = `
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr><th>Rank</th><th>Name</th><th>Score</th><th>Date</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function clearScores() {
+    localStorage.removeItem(STORAGE_KEY);
+    state.leaderboard = [];
+    renderLeaderboard();
+  }
+
+  function goHome() {
+    show(homeEl);
+  }
+
+  // Event Listeners
+  startBtn.addEventListener("click", startQuiz);
+  viewLeaderboardBtn.addEventListener("click", () => { loadLeaderboard(); renderLeaderboard(); show(leaderboardEl); });
+  nextBtn.addEventListener("click", nextQuestion);
+  quitBtn.addEventListener("click", () => { state.index = 0; state.score = 0; state.selected = null; state.answers = []; goHome(); });
+  saveScoreBtn.addEventListener("click", saveScore);
+  skipLeaderboardBtn.addEventListener("click", () => { loadLeaderboard(); renderLeaderboard(); show(leaderboardEl); });
+  homeBtn.addEventListener("click", goHome);
+  backHomeBtn.addEventListener("click", goHome);
+  clearScoresBtn.addEventListener("click", clearScores);
+
+  loadLeaderboard();
+</script>
+</body>
+</html>
